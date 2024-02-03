@@ -12,7 +12,7 @@ use crate::contact::{Contact, MessageExpiration};
 
 
 pub fn run_dialogue(list_of_contacts: String) {
-    // let account_number = get_account_number(&list_of_contacts);
+    let account_number = get_account_number(&list_of_contacts);
     let contacts = get_recipients(&list_of_contacts);
     let filtered_contacts: Vec<_> = contacts.iter().filter(|&contact| !(contact.name.is_empty() && contact.profile_name.is_empty())).cloned().collect();
     let choice = Select::new("Write and schedule a message for:", filtered_contacts).prompt();
@@ -44,9 +44,9 @@ pub fn run_dialogue(list_of_contacts: String) {
                     let message = store_message().unwrap();
                     countdown(message_time);
                     // Return and print the output or failure!
-                    // if send_message_to_recipient(choice.number.clone(), message.clone(), &account_number) {
-                    println!("\"{}\" sent to {} @ {}", message.blink().bold().blue(), choice.number.red(), message_time.to_string().italic().underline().bright_purple());
-                    // }
+                    if send_message_to_recipient(choice.number.clone(), message.clone(), &account_number) {
+                        println!("\"{}\" sent to {} @ {}", message.blink().bold().blue(), choice.number.red(), message_time.to_string().italic().underline().bright_purple());
+                    }
                 } else {
                     println!("{}", "Canceled!".bold().red());
                 }
@@ -200,7 +200,6 @@ fn send_message_to_self(message: String) -> bool {
     }
 }
 
-#[allow(dead_code)]
 fn send_message_to_recipient(number: String, message: String, account: &str) -> bool {
     match Command::new("signal-cli").args(["-a", &account, "send", "-m", &message, &number]).output() {
         Ok(output) => {
@@ -236,9 +235,8 @@ pub fn get_contact_list() -> Option<String> {
     }
 }
 
-#[allow(dead_code)]
 fn get_account_number(contacts: &str) -> String {
-    // Extracts primary device account number // might fail with multiple accounts or devices?
+    // Extracts primary device account number // might fail with multiple accounts?
     let mut words = contacts.split_whitespace();
     let _ = words.next();
     if let Some(word) = words.next() {

@@ -1,8 +1,8 @@
-use std::process::Command;
-use std::thread;
 use chrono::{NaiveDate, Duration, Local, NaiveTime, NaiveDateTime, TimeZone};
 use chrono_tz::Europe::Berlin; // <- MODIFY to match your local time zone!
 use inquire::{Select, InquireError, Confirm, Text, validator::Validation, CustomType, DateSelect};
+use std::process::Command;
+use std::thread;
 use std::result::Result;
 use std::time::{SystemTime, UNIX_EPOCH, Duration as SystemDuration};
 use std::io::{self, Write};

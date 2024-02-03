@@ -14,5 +14,3 @@ target/
 
 # Added by cargo
 /target
-/assets
-/demo.gif

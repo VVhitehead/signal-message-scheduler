@@ -11,7 +11,7 @@ use colored::Colorize;
 use crate::contact::{Contact, MessageExpiration};
 
 
-pub fn run_dialogue(list_of_contacts: String) {
+pub(crate) fn run_dialogue(list_of_contacts: String) {
     let account_number = get_account_number(&list_of_contacts);
     let contacts = get_recipients(&list_of_contacts);
     let filtered_contacts: Vec<_> = contacts.iter().filter(|&contact| !(contact.name.is_empty() && contact.profile_name.is_empty())).cloned().collect();
@@ -155,7 +155,7 @@ fn system_time_seconds() -> u64 {
     }
 }
 
-pub fn format_time_from_seconds(seconds: u64) -> String {
+pub(crate) fn format_time_from_seconds(seconds: u64) -> String {
     let mut days: u64 = 0;
     let mut hours: u64 = 0;
     let mut minutes: u64 = 0;
@@ -218,7 +218,7 @@ fn send_message_to_recipient(number: String, message: String, account: &str) -> 
     }
 }
 
-pub fn get_contact_list() -> Option<String> {
+pub(crate) fn get_contact_list() -> Option<String> {
     match Command::new("signal-cli").arg("listContacts").output() {
         Ok(output) => {
             if output.status.success() {

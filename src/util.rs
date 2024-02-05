@@ -1,6 +1,6 @@
 use chrono::{NaiveDate, Duration, Local, NaiveTime, NaiveDateTime, TimeZone};
 use chrono_tz::Europe::Berlin; // <- MODIFY to match your local time zone!
-use inquire::{Select, InquireError, Confirm, Text, validator::Validation, CustomType, DateSelect};
+use inquire::{Select, InquireError, Confirm, Text, validator::Validation, CustomType, DateSelect, required};
 use std::process::Command;
 use std::thread;
 use std::result::Result;
@@ -29,7 +29,7 @@ pub(crate) fn run_dialogue(list_of_contacts: String) {
                     let message = store_message().unwrap();
                     countdown(message_time);
                     if send_message_to_self(message.clone()) {
-                        println!("\"{}\" sent to {}(self as note) @ {}", message.blink().bold().blue(), choice.number.bright_purple(), message_time.to_string().italic().underline().bright_purple());
+                        println!("\"{}\" sent to {}(as self-note) @ {}", message.blink().bold().blue(), choice.number.bright_purple(), message_time.to_string().italic().underline().bright_purple());
                     }
             } else {
                 println!("{}", "Canceled!".bold().red());
@@ -141,7 +141,7 @@ fn store_message() -> Result<String, InquireError> {
     // TODO: add support for new lines, '\n' or "\\n", "\r\n" don't seem to work
     let message = Text::new("Type the message you want sent:")
         .with_help_message("Signal formating might work, new lines don't tho...")
-        // TODO: Reject an empty message!
+        .with_validator(required!("Cannot send an empty message!"))
         .prompt();
     message
 }

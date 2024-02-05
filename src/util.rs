@@ -43,7 +43,6 @@ pub(crate) fn run_dialogue(list_of_contacts: String) {
                     let message_time = NaiveDateTime::parse_from_str(&format!("{} {}", pick_date().unwrap(), pick_time().unwrap()), "%Y-%m-%d %H:%M:%S").expect("Full DateTime string");
                     let message = store_message().unwrap();
                     countdown(message_time);
-                    // Return and print the output or failure!
                     if send_message_to_recipient(choice.number.clone(), message.clone(), &account_number) {
                         println!("\"{}\" sent to {} @ {}", message.blink().bold().blue(), choice.number.red(), message_time.to_string().italic().underline().bright_purple());
                     }
@@ -89,8 +88,7 @@ fn get_recipients(input: &str) -> Vec<Contact> {
                 if let Ok(seconds) = value.parse::<u32>() {
                     MessageExpiration::TimeInSeconds(seconds)
                 } else {
-                    // Chuck unexpected values as Disabled
-                    MessageExpiration::Disabled
+                    MessageExpiration::Disabled // Chuck unexpected values as Disabled
                 }
             }
         };
@@ -160,7 +158,6 @@ pub(crate) fn format_time_from_seconds(seconds: u64) -> String {
     let mut hours: u64 = 0;
     let mut minutes: u64 = 0;
     let mut seconds_remaining: u64 = seconds;
-    let width = 2;
     if seconds_remaining / 86400 >= 1 {
         days = seconds_remaining / 86400;
         seconds_remaining %= 86400;
@@ -174,11 +171,11 @@ pub(crate) fn format_time_from_seconds(seconds: u64) -> String {
         seconds_remaining %= 60;
     }
     if days == 1 {
-        return format!("{0} day, {1:>0width$}:{2:>0width$}:{3:>0width$}", days, hours, minutes, seconds_remaining)
+        return format!("{0} day, {1:>02}:{2:>02}:{3:>02}", days, hours, minutes, seconds_remaining)
     } else if days > 1 {
-       return format!("{0} days, {1:>0width$}:{2:>0width$}:{3:>0width$}", days, hours, minutes, seconds_remaining)
+       return format!("{0} days, {1:>02}:{2:>02}:{3:>02}", days, hours, minutes, seconds_remaining)
     } else {
-        return format!("{0:>0width$}:{1:>0width$}:{2:>0width$}", hours, minutes, seconds_remaining)
+        return format!("{0:>02}:{1:>02}:{2:>02}", hours, minutes, seconds_remaining)
     }
 }
 

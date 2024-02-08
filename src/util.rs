@@ -251,7 +251,7 @@ fn countdown(message_time: NaiveDateTime) {
     let wait_time = u_message_time - current_time;
     for i in (0..wait_time).rev() {
         // Add a spinner for the countdown?
-        print!("Message will be sent in {}", format_time_from_seconds(i).bold().yellow());
+        print!("Message will be sent in {} {}", format_time_from_seconds(i).bold().yellow(), "Press `CTRL-C` to cancel".dimmed());
         io::stdout().flush().unwrap();
         thread::sleep(SystemDuration::from_secs(1));
         print!("{}[1K\r", 27 as char);

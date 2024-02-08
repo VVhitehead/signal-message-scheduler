@@ -29,7 +29,8 @@ pub(crate) fn run_dialogue(list_of_contacts: String) {
                     let message = store_message().unwrap();
                     countdown(message_time);
                     if send_message_to_self(message.clone()) {
-                        println!("\"{}\" sent to {}(as self-note) @ {}", message.blink().bold().blue(), choice.number.bright_purple(), message_time.to_string().italic().underline().bright_purple());
+                        println!("\"{}\" sent to {}(as note to {}) @ {}", message.blink().bold().blue(), choice.number.bright_green().italic(), "SELF".bright_green().italic(), 
+                                 message_time.to_string().italic().underline().bright_purple());
                     }
             } else {
                 println!("{}", "Canceled!".bold().red());
@@ -44,7 +45,7 @@ pub(crate) fn run_dialogue(list_of_contacts: String) {
                     let message = store_message().unwrap();
                     countdown(message_time);
                     if send_message_to_recipient(choice.number.clone(), message.clone(), &account_number) {
-                        println!("\"{}\" sent to {} @ {}", message.blink().bold().blue(), choice.number.red(), message_time.to_string().italic().underline().bright_purple());
+                        println!("\"{}\" sent to {} @ {}", message.blink().bold().blue(), choice.number.red().italic(), message_time.to_string().italic().underline().bright_purple());
                     }
                 } else {
                     println!("{}", "Canceled!".bold().red());

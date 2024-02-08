@@ -7,7 +7,6 @@ Interactive CLI message scheduler for the [Signal](https://signal.org/) Messenge
 - Write a message at the dead of night and have it be sent at a reasonable time during the day (Cancel at any time before its sent)
 - Congratulate birthdays/holidays/special occasions 
 
-
 ## Requirements
 [Signal Messenger](https://signal.org/) account linked to [signal-cli](https://github.com/AsamK/signal-cli/wiki/Quickstart)
 
@@ -17,6 +16,7 @@ Once Rust is installed, you can clone this repository:
 ```
 git clone https://github.com/VVhitehead/signal-message-scheduler.git
 ```
+
 Before building, in the following code, change the TZ identifier(viz. `Europe::Berlin`) to match your local [Time Zone](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones)
 https://github.com/VVhitehead/signal-message-scheduler/blob/8ffbbf2ef482ce537e64f7ef7a2e8b9ed147ff20/src/util.rs#L2
 

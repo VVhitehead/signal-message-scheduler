@@ -7,7 +7,7 @@ Interactive CLI message scheduler for the [Signal](https://signal.org/) Messenge
 - Write a message at the dead of night and have it be sent at a reasonable time during the day (Cancel at any time before its sent)
 - Congratulate birthdays/holidays/special occasions 
 
-## Requirements
+## Prerequisites 
 [Signal Messenger](https://signal.org/) account linked to [signal-cli](https://github.com/AsamK/signal-cli/wiki/Quickstart)
 
 ## Building

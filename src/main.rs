@@ -9,10 +9,9 @@ pub mod contact;
 fn main() {
     println!("    -- Message scheduler for {} Messenger --\n\n","Signal".bold().blue());
 
-    let mut sp = Spinner::new(Spinners::Point, "Fetching contacts".into());   
+    let mut sp = Spinner::new(Spinners::Point, String::new());   
     let contacts = util::get_contact_list().unwrap();
-    sp.stop();
-    print!("\x1b[2K\r");
+    sp.stop_with_symbol("\x1b[2K\x1b");
     
     util::run_dialogue(contacts.to_string());
 }

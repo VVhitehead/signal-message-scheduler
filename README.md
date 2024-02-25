@@ -1,7 +1,7 @@
 # Signal message scheduler
 Interactive CLI message scheduler for the [Signal](https://signal.org/) Messenger.
 
-![demo](https://github.com/VVhitehead/signal-message-scheduler/assets/15060088/02337a0b-7bde-4d25-8499-9d4205ee05a1)
+![demo](https://github.com/VVhitehead/signal-message-scheduler/assets/15060088/dfedb570-795c-4ce7-bb31-bf6ffeefeebe)
 
 ## Why tho?
 - Write a message at the dead of night and have it be sent at a reasonable time during the day (Cancel at any time before its sent)

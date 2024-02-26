@@ -7,7 +7,7 @@ pub mod contact;
 
 
 fn main() {
-    println!("    -- Message scheduler for {} Messenger --\n\n","Signal".bold().blue());
+    println!("    -- Message scheduler for {} Messenger --\n","Signal".bold().blue());
 
     let mut sp = Spinner::new(Spinners::Point, String::new());   
     let contacts = util::get_contact_list().unwrap();

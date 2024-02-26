@@ -2,7 +2,7 @@ use chrono::{NaiveDate, Duration, Local, NaiveTime, NaiveDateTime, TimeZone};
 use chrono_tz::Europe::Berlin; // <- MODIFY to match your local time zone!
 use inquire::{Select, InquireError, Confirm, Text, validator::Validation, CustomType, DateSelect, required};
 use std::process::Command;
-use std::thread;
+use std::{thread, println};
 use std::result::Result;
 use std::time::{SystemTime, UNIX_EPOCH, Duration as SystemDuration};
 use std::io::{self, Write};
@@ -68,12 +68,7 @@ fn get_recipients(input: &str) -> Vec<Contact> {
         let contact_field_values = line.replace("Number: ", "").replace("Name: ", "").replace("Profile name: ", "").replace("Username:", "").replace("Color: ", "").replace("Blocked: ", "").replace("Message expiration: ", "");
         let fields: Vec<_> = contact_field_values.trim().split(' ').collect();
 
-        let blocked = match fields[6].trim() {
-            "true" => true,
-            "false" => false,
-            _ => false,
-        };
-
+        let blocked = contact_field_values.contains("true");
         // Very clunky but works
         let mut expiration: String;
         if fields.last().unwrap().ends_with("s") {

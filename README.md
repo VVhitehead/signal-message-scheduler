@@ -20,9 +20,6 @@ Once Rust is installed, you can clone this repository:
 git clone https://github.com/VVhitehead/signal-message-scheduler.git
 ```
 
-Before building, in the following code, change the TZ identifier(viz. `Europe::Berlin`) to match your local [Time Zone](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones)
-https://github.com/VVhitehead/signal-message-scheduler/blob/8ffbbf2ef482ce537e64f7ef7a2e8b9ed147ff20/src/util.rs#L2
-
 Build the project:
 ```
 cargo build

@@ -9,5 +9,4 @@ edition = "2021"
 inquire = { version = "0.6.2", features = ["date"] }
 colored = "2.0.4"
 chrono = "0.4.31"
-chrono-tz = "0.8.5"
 spinners = "4.1.1"

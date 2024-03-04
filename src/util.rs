@@ -1,5 +1,4 @@
 use chrono::{NaiveDate, Duration, Local, NaiveTime, NaiveDateTime, TimeZone};
-use chrono_tz::Europe::Berlin; // <- MODIFY to match your local time zone!
 use inquire::{Select, InquireError, Confirm, Text, validator::Validation, CustomType, DateSelect, required};
 use std::process::Command;
 use std::{thread, println};
@@ -228,6 +227,24 @@ pub(crate) fn get_contact_list() -> Option<String> {
     }
 }
 
+#[allow(dead_code)] // Makes an additional call adding unnecessary wait time unless multiple accounts
+fn get_own_accounts() -> Option<String> {
+    match Command::new("signal-cli").arg("listAccounts").output() {
+        Ok(output) => {
+            if output.status.success() {
+                Some(String::from_utf8_lossy(&output.stdout).to_string()) 
+            } else {
+                println!("signal-cli returned err: {}", String::from_utf8_lossy(&output.stderr));
+                None
+            }
+        }
+        Err(e) => {
+            println!("Failed to run `signal-cli listAccounts`: {}", e);
+            None
+        }
+    }
+}
+
 fn get_account_number(contacts: &str) -> String {
     // Extracts primary device account number // might fail with multiple accounts?
     let mut words = contacts.split_whitespace();
@@ -240,15 +257,14 @@ fn get_account_number(contacts: &str) -> String {
 }
 
 fn countdown(message_time: NaiveDateTime) {
-    let local_message_time = Berlin.from_local_datetime(&message_time).unwrap();
+    let local_message_time = Local.from_local_datetime(&message_time).unwrap();
     let u_message_time: u64 = local_message_time.timestamp().try_into().unwrap();
     let current_time = system_time_seconds();
     let wait_time = u_message_time - current_time;
     for i in (0..wait_time).rev() {
-        // Add a spinner for the countdown?
         print!("Message will be sent in {} {}", format_time_from_seconds(i).bold().yellow(), "Press Ctrl+C to cancel".dimmed());
         io::stdout().flush().unwrap();
         thread::sleep(SystemDuration::from_secs(1));
-        print!("{}[1K\r", 27 as char);
+        print!("\x1b[1K\r");
     }
 }

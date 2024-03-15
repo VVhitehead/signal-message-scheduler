@@ -1,0 +1,17 @@
+pkgbase = signal-message-scheduler
+	pkgdesc = Interactive CLI message scheduler for Signal Messenger
+	pkgver = 1.1.0
+	pkgrel = 1
+	url = https://github.com/VVhitehead/signal-message-scheduler
+	arch = x86_64
+	license = MIT
+	makedepends = rust
+	makedepends = cargo
+	makedepends = git
+	depends = signal-cli
+	provides = smsch
+	source = git+https://github.com/VVhitehead/signal-message-scheduler.git#tag={_tag}?signed
+	validpgpkeys = A4694B0277FDB74B5B1208C1E510461A0D172902
+	md5sums = SKIP
+
+pkgname = signal-message-scheduler

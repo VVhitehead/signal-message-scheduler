@@ -16,6 +16,6 @@ target/
 /target
 /assets
 # AUR
-!.SRCINFO
-!PKGBUILD
+.SRCINFO
+PKGBUILD
 signal-message-scheduler/

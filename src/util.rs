@@ -70,7 +70,7 @@ fn get_recipients(input: &str) -> Vec<Contact> {
         let blocked = contact_field_values.contains("true");
         // Very clunky but works
         let mut expiration: String;
-        if fields.last().unwrap().ends_with("s") {
+        if fields.last().unwrap().ends_with('s') {
             expiration = fields.last().unwrap().to_string();
             expiration.pop();
         } else {
@@ -90,8 +90,8 @@ fn get_recipients(input: &str) -> Vec<Contact> {
 
         let contact = Contact {
             id: index as u16,
-            number: format!("{}", fields[0].trim()),
-            name: format!("{}", fields[1].trim()),
+            number: fields[0].trim().to_string(),
+            name: fields[1].trim().to_string(),
             profile_name: full_profile_name.trim().to_string(),
             blocked,
             message_expiration,
@@ -166,11 +166,11 @@ pub(crate) fn format_time_from_seconds(seconds: u64) -> String {
         seconds_remaining %= 60;
     }
     if days == 1 {
-        return format!("{0} day, {1:>02}:{2:>02}:{3:>02}", days, hours, minutes, seconds_remaining)
+        format!("{0} day, {1:>02}:{2:>02}:{3:>02}", days, hours, minutes, seconds_remaining)
     } else if days > 1 {
-       return format!("{0} days, {1:>02}:{2:>02}:{3:>02}", days, hours, minutes, seconds_remaining)
+       format!("{0} days, {1:>02}:{2:>02}:{3:>02}", days, hours, minutes, seconds_remaining)
     } else {
-        return format!("{0:>02}:{1:>02}:{2:>02}", hours, minutes, seconds_remaining)
+        format!("{0:>02}:{1:>02}:{2:>02}", hours, minutes, seconds_remaining)
     }
 }
 

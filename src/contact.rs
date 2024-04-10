@@ -4,10 +4,10 @@ use colored::Colorize;
 use crate::util::format_time_from_seconds;
 
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Default, Clone)]
 pub enum MessageExpiration {
         TimeInSeconds(u32),
-        Disabled,
+        #[default] Disabled,
 }
 
 #[derive(Debug, Default, Clone)]
@@ -19,12 +19,6 @@ pub struct Contact {
     pub blocked: bool,
     pub message_expiration: MessageExpiration,
     pub _color: String // Unimportant field, could maybe use it to color profile names with similar color?
-}
-
-impl Default for MessageExpiration {
-    fn default() -> Self {
-        MessageExpiration::Disabled
-    }
 }
 
 // Conversion from u32 to MessageExpiration

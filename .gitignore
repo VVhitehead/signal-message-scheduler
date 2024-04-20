@@ -15,8 +15,4 @@ target/
 # Added by cargo
 /target
 /assets
-# AUR
-*
-!.SRCINFO
-!PKGBUILD
-signal-message-scheduler/
+

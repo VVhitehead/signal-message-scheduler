@@ -1,6 +1,10 @@
 [package]
-name = "signal-cli-message-scheduler"
-version = "0.1.0"
+authors = ["VVhitehead <perm4z38@tutanota.com>"]
+description = "Interactive CLI message scheduler for Signal Messenger"
+repository = "https://github.com/VVhitehead/signal-message-scheduler"
+name = "signal-message-scheduler"
+version = "1.1.1"
+license = "MIT"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
@@ -10,3 +14,10 @@ inquire = { version = "0.6.2", features = ["date"] }
 colored = "2.0.4"
 chrono = "0.4.31"
 spinners = "4.1.1"
+
+# AUR
+[[bin]]
+name = "signal-message-scheduler"
+
+[package.metadata.aur]
+depends = ["signal-cli"]

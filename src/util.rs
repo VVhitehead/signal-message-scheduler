@@ -64,7 +64,8 @@ fn get_recipients(input: &str) -> Vec<Contact> {
         let end_bytes = line.find("Username: ").unwrap();
         let value_bytes = "Profile name: ".len();
         let full_profile_name = &line[(start_bytes + value_bytes)..end_bytes];
-        let contact_field_values = line.replace("Number: ", "").replace("Name: ", "").replace("Profile name: ", "").replace("Username:", "").replace("Color: ", "").replace("Blocked: ", "").replace("Message expiration: ", "");
+        let contact_field_values = line.replace("Number: ", "").replace("ACI: ", "").replace("Name: ", "").replace("Profile name: ", "").replace("Username:", "")
+            .replace("Color: ", "").replace("Blocked: ", "").replace("Message expiration: ", "");
         let fields: Vec<_> = contact_field_values.trim().split(' ').collect();
 
         let blocked = contact_field_values.contains("true");
@@ -91,7 +92,8 @@ fn get_recipients(input: &str) -> Vec<Contact> {
         let contact = Contact {
             id: index as u16,
             number: fields[0].trim().to_string(),
-            name: fields[1].trim().to_string(),
+            account_identifier: fields[1].trim().to_string(),
+            name: fields[2].trim().to_string(),
             profile_name: full_profile_name.trim().to_string(),
             blocked,
             message_expiration,

@@ -13,6 +13,7 @@ pub enum MessageExpiration {
 #[derive(Debug, Default, Clone)]
 pub struct Contact {
     pub id: u16,
+    pub account_identifier: String,
     pub number: String,
     pub name: String,
     pub profile_name: String,

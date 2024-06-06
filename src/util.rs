@@ -50,7 +50,7 @@ pub(crate) fn run_dialogue(list_of_contacts: String) {
                     println!("{}", "Canceled!".bold().red());
                 }
             }
-            println!("");
+            println!();
         },
         Err(_) => println!("You did not select a valid option!"),
     }
@@ -195,7 +195,7 @@ fn send_message_to_self(message: String) -> bool {
 }
 
 fn send_message_to_recipient(number: String, message: String, account: &str) -> bool {
-    match Command::new("signal-cli").args(["-a", &account, "send", "-m", &message, &number]).output() {
+    match Command::new("signal-cli").args(["-a", account, "send", "-m", &message, &number]).output() {
         Ok(output) => {
             if output.status.success() {
                 true

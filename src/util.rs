@@ -108,14 +108,16 @@ pub(crate) fn run_contact_dialogue(list_of_contacts: String) {
 
 fn get_groups(input: &str) -> Vec<Group> {
     let mut groups: Vec<Group> = Vec::new();
-    // Description can contain new lines so first divide the string at "Id: " and collect than iterate and do work on each group string 
+
     let split_input: Vec<&str> = input.split("\nId: ").collect();
     for (index, line) in split_input.into_iter().enumerate() {
         let id = extract_between(line, "Id: ", " Name: ");
         let active = extract_between(line, "Active: ", " Blocked: ").trim() == "true";
         let blocked = extract_between(line, "Blocked: ", " Members: ").trim() == "true";
         let name = extract_between(line, "Name: ", " Description: ").trim().to_string();
-        let description = extract_between(line, "Description: ", " Active: ").replace('\n', "␤ 🡿 ").to_string();
+        // Indicate a new line has been replaced for consolidation of precious terminal space and
+        // maintaining one line per field whenever the terminal width is sufficient to allow for it 
+        let description = extract_between(line, "Description: ", " Active: ").replace('\n', "␤ 🡿 ").to_string(); 
         let members: Vec<_> = extract_between(line, "Members: [", "] Pending members").split(", ").map(|x| x.to_string()).collect();
         let pending_members: Vec<_> = extract_between(line, "Pending members: [", "] Requesting members: ").split(", ").map(|x| x.to_string()).collect();
         let requesting_members: Vec<_> = extract_between(line, "Requesting members: [", "] Admins: ").split(", ").map(|x| x.to_string()).collect();
@@ -237,7 +239,7 @@ fn system_time_seconds() -> u64 {
     }
 }
 
-//Return result as String or empty an empty String if not found    
+//Return result as String or empty an empty String if not found
 fn extract_between<'a>(source: &'a str, start: &'a str, end: &'a str) -> String {
     let start_position = source.find(start);
 

@@ -1,16 +1,66 @@
 use chrono::{NaiveDate, Duration, Local, NaiveTime, NaiveDateTime, TimeZone};
 use inquire::{Select, InquireError, Confirm, Text, validator::Validation, CustomType, DateSelect, required};
 use std::process::Command;
-use std::{thread, println};
+use std::thread;
 use std::result::Result;
 use std::time::{SystemTime, UNIX_EPOCH, Duration as SystemDuration};
 use std::io::{self, Write};
 use colored::Colorize;
 
-use crate::contact::{Contact, MessageExpiration};
+use crate::contact::{Contact, MessageExpiration, Group};
 
+pub(crate) fn initial_select() -> String {
+    let options: Vec<&str> = vec!["Contacts", "Groups"];
+    let choice = Select::new("Access your contacts or groups?", options)
+        .with_help_message("Contacts are verified Signal users you've added and Groups are a collection of memebers which may or may not be in your Signal contacts.").prompt();
 
-pub(crate) fn run_dialogue(list_of_contacts: String) {
+    match choice {
+        Ok(choice) => {
+            if choice == "Contacts" {
+                "contacts".to_string()
+            } else if choice == "Groups" {
+                "groups".to_string()
+            } else {
+                panic!("Failed to fetch groups(Maybe your not a member of any group?)");
+            }
+        },
+        Err(_) => panic!("Red or blue!"),
+    }
+}
+
+pub(crate) fn run_group_dialogue(grouplist: String) {
+    //let account_number = get_own_accounts().unwrap();
+    let groups = get_groups(&grouplist);
+    let choice = Select::new("Write and schedule a message for:", groups).prompt();
+
+    match choice {
+        Ok(choice) => {
+            if !choice.blocked {
+                let confirmed = Confirm::new(&(format!("You want to message: {} ({})", choice.name.green().bold(), format!("{}…", choice.description.get(0..20).unwrap()).blue().italic())))
+                    .with_default(true)
+                    .prompt()
+                    .unwrap();
+                if confirmed {
+                    let message_time = NaiveDateTime::parse_from_str(&format!("{} {}", pick_date().unwrap(), pick_time().unwrap()), "%Y-%m-%d %H:%M:%S").expect("Full DateTime string");
+                    let message = store_message().unwrap();
+                    countdown(message_time);
+                    if send_message_to_group(choice.id, message.clone()) {
+                        println!("\"{}\" sent to group: {} @ {}", message.blink().bold().blue(), choice.name.green().bold(), message_time.to_string().italic().underline().bright_purple());
+                    }
+                } else {
+                   println!("Failed sending to group: {}", choice.name);
+                }
+            } 
+            else {
+               eprintln!("You are blocked from the group: {}", choice.name);
+            }
+            println!();
+        }
+        Err(_) => panic!("You did not select a valid option!"),
+    }
+}
+
+pub(crate) fn run_contact_dialogue(list_of_contacts: String) {
     let account_number = get_account_number(&list_of_contacts);
     let contacts = get_recipients(&list_of_contacts);
     let filtered_contacts: Vec<_> = contacts.iter().filter(|&contact| !(contact.name.is_empty() && contact.profile_name.is_empty())).cloned().collect();
@@ -56,32 +106,69 @@ pub(crate) fn run_dialogue(list_of_contacts: String) {
     }
 }
 
+fn get_groups(input: &str) -> Vec<Group> {
+    let mut groups: Vec<Group> = Vec::new();
+    // Description can contain new lines so first divide the string at "Id: " and collect than iterate and do work on each group string 
+    let split_input: Vec<&str> = input.split("\nId: ").collect();
+    for (index, line) in split_input.into_iter().enumerate() {
+        let id = extract_between(line, "Id: ", " Name: ");
+        let active = extract_between(line, "Active: ", " Blocked: ").trim() == "true";
+        let blocked = extract_between(line, "Blocked: ", " Members: ").trim() == "true";
+        let name = extract_between(line, "Name: ", " Description: ").trim().to_string();
+        let description = extract_between(line, "Description: ", " Active: ").replace('\n', "␤ 🡿 ").to_string();
+        let members: Vec<_> = extract_between(line, "Members: [", "] Pending members").split(", ").map(|x| x.to_string()).collect();
+        let pending_members: Vec<_> = extract_between(line, "Pending members: [", "] Requesting members: ").split(", ").map(|x| x.to_string()).collect();
+        let requesting_members: Vec<_> = extract_between(line, "Requesting members: [", "] Admins: ").split(", ").map(|x| x.to_string()).collect();
+        let admins: Vec<_> = extract_between(line, "Admins: [", "] Banned: ").split(", ").map(|x| x.to_string()).collect();
+        let banned: Vec<_> = extract_between(line, "Banned: [", "] Message expiration: ").split(", ").map(|x| x.to_string()).collect();
+        let link = line.split(' ').last().expect("Proper \"https://signal.group/#XXX...\" url or '-' for no link!").to_string();
+
+        let message_expiration = match extract_between(line, "Message expiration: ", "Link: ").as_str() {
+            "disabled" => MessageExpiration::Disabled,
+            value => {
+                if let Ok(seconds) = value.trim_end_matches('s').parse::<u32>() {
+                    MessageExpiration::TimeInSeconds(seconds)
+                } else {
+                    MessageExpiration::Disabled // Chuck unexpected values as Disabled
+                }
+            }
+        };
+
+        let group = Group {
+            id, 
+            numeric_id: index as u16,
+            name,
+            description,
+            active,
+            blocked,
+            members,
+            pending_members,
+            requesting_members,
+            admins,
+            banned,
+            message_expiration,
+            link,
+        };
+        groups.push(group);
+    }
+    groups
+}
+
 fn get_recipients(input: &str) -> Vec<Contact> {
     let mut contacts: Vec<Contact> = Vec::new();
 
     for (index, line) in input.lines().enumerate() {
-        let start_bytes = line.find("Profile name: ").unwrap();
-        let end_bytes = line.find("Username: ").unwrap();
-        let value_bytes = "Profile name: ".len();
-        let full_profile_name = &line[(start_bytes + value_bytes)..end_bytes];
-        let contact_field_values = line.replace("Number: ", "").replace("ACI: ", "").replace("Name: ", "").replace("Profile name: ", "").replace("Username:", "")
-            .replace("Color: ", "").replace("Blocked: ", "").replace("Message expiration: ", "");
-        let fields: Vec<_> = contact_field_values.trim().split(' ').collect();
+        let number = extract_between(line, "Number: ", " ACI: ");
+        let account_identifier = extract_between(line, " ACI: ", " Name: ");
+        let name = extract_between(line, " Name: ", " Profile name: ");
+        let profile_name = extract_between(line, " Profile name: ", " Username: ");
+        let blocked = extract_between(line, " Blocked: ", " Message expiration: ").trim() == "true";
 
-        let blocked = contact_field_values.contains("true");
-        // Very clunky but works
-        let mut expiration: String;
-        if fields.last().unwrap().ends_with('s') {
-            expiration = fields.last().unwrap().to_string();
-            expiration.pop();
-        } else {
-            expiration = "disabled".to_string();
-        }
-
-        let message_expiration = match expiration.as_str() {
+        //let message_expiration = match extract_between(line, " Message expiration: ", "Link: ").as_str() {
+        let message_expiration = match line.split(" Message expiration: ").last().expect("string ‟disabled‟, or a string representing the number in seconds with a trailing's'(‟2419200s‟)") {
             "disabled" => MessageExpiration::Disabled,
             value => {
-                if let Ok(seconds) = value.parse::<u32>() {
+                if let Ok(seconds) = value.trim_matches('s').parse::<u32>() {
                     MessageExpiration::TimeInSeconds(seconds)
                 } else {
                     MessageExpiration::Disabled // Chuck unexpected values as Disabled
@@ -91,10 +178,10 @@ fn get_recipients(input: &str) -> Vec<Contact> {
 
         let contact = Contact {
             id: index as u16,
-            number: fields[0].trim().to_string(),
-            account_identifier: fields[1].trim().to_string(),
-            name: fields[2].trim().to_string(),
-            profile_name: full_profile_name.trim().to_string(),
+            number,
+            account_identifier,
+            name,
+            profile_name,
             blocked,
             message_expiration,
             ..Default::default()
@@ -150,6 +237,19 @@ fn system_time_seconds() -> u64 {
     }
 }
 
+//Return result as String or empty an empty String if not found    
+fn extract_between<'a>(source: &'a str, start: &'a str, end: &'a str) -> String {
+    let start_position = source.find(start);
+
+    if start_position.is_some() {
+        let start_position = start_position.unwrap() + start.len();
+        let source = &source[start_position..];
+        let end_position = source.find(end).unwrap_or_default();
+        return source[..end_position].to_string();
+    }
+    "".to_string()
+}
+
 pub(crate) fn format_time_from_seconds(seconds: u64) -> String {
     let mut days: u64 = 0;
     let mut hours: u64 = 0;
@@ -168,16 +268,16 @@ pub(crate) fn format_time_from_seconds(seconds: u64) -> String {
         seconds_remaining %= 60;
     }
     if days == 1 {
-        format!("{0} day, {1:>02}:{2:>02}:{3:>02}", days, hours, minutes, seconds_remaining)
+        return format!("{0} day, {1:>02}:{2:>02}:{3:>02}", days, hours, minutes, seconds_remaining)
     } else if days > 1 {
-       format!("{0} days, {1:>02}:{2:>02}:{3:>02}", days, hours, minutes, seconds_remaining)
+       return format!("{0} days, {1:>02}:{2:>02}:{3:>02}", days, hours, minutes, seconds_remaining)
     } else {
-        format!("{0:>02}:{1:>02}:{2:>02}", hours, minutes, seconds_remaining)
+        return format!("{0:>02}:{1:>02}:{2:>02}", hours, minutes, seconds_remaining)
     }
 }
 
 fn send_message_to_self(message: String) -> bool {
-    match Command::new("signal-cli").args(["send", "--note-to-self", "-m", &message]).output() {
+    match Command::new("signal-cli").args(["send", "--note-to-self", "--notify-self", "-m", &message]).output() {
         Ok(output) => {
             if output.status.success() {
                 true
@@ -212,8 +312,47 @@ fn send_message_to_recipient(number: String, message: String, account: &str) -> 
     }
 }
 
-pub(crate) fn get_contact_list() -> Option<String> {
-    match Command::new("signal-cli").arg("listContacts").output() {
+fn send_message_to_group(id: String, message: String) -> bool {
+    match Command::new("signal-cli").args(["send", "-g", &id, "-m", &message]).output() {
+        Ok(output) => {
+            if output.status.success() {
+                true
+            } else {
+                let stderr = String::from_utf8_lossy(&output.stderr);
+                println!("`singal-cli` wrote to stderr: {}", stderr);
+                false
+            }
+        }
+        Err(e) => {
+            println!("Failed to run `signal-cli send -g` command: {}", e);
+            false
+        }
+    }
+}
+
+pub(crate) fn get_contact_list(option: &str) -> Option<String> {
+    if option == "contacts" {
+        match Command::new("signal-cli").arg("listContacts").output() {
+            Ok(output) => {
+                if output.status.success() {
+                    Some(String::from_utf8_lossy(&output.stdout).to_string()) 
+                } else {
+                    println!("signal-cli returned err: {}", String::from_utf8_lossy(&output.stderr));
+                    None
+                }
+            }
+            Err(e) => {
+                println!("Failed to run `signal-cli`: {}", e);
+                None
+            }
+        }
+    } else {
+        panic!("Feck Groups not implemented yet!");
+    }
+}
+
+pub(crate) fn get_group_list() -> Option<String> {
+    match Command::new("signal-cli").args(["listGroups", "-d"]).output() {
         Ok(output) => {
             if output.status.success() {
                 Some(String::from_utf8_lossy(&output.stdout).to_string()) 
@@ -230,11 +369,12 @@ pub(crate) fn get_contact_list() -> Option<String> {
 }
 
 #[allow(dead_code)] // Makes an additional call adding unnecessary wait time unless multiple accounts
-fn get_own_accounts() -> Option<String> {
+// Change to `Option<Vec<String>>` to support multiple accounts
+pub(crate) fn get_own_accounts() -> Option<String> {
     match Command::new("signal-cli").arg("listAccounts").output() {
         Ok(output) => {
             if output.status.success() {
-                Some(String::from_utf8_lossy(&output.stdout).to_string()) 
+                Some(String::from_utf8_lossy(&output.stdout).replace("Number: ", "").to_string()) 
             } else {
                 println!("signal-cli returned err: {}", String::from_utf8_lossy(&output.stderr));
                 None

@@ -2,9 +2,10 @@ use std::fmt;
 use colored::Colorize;
 
 use crate::util::format_time_from_seconds;
+//use crate::util::get_own_accounts;
 
 
-#[derive(Debug, Default, Clone)]
+#[derive(Debug, Clone, Default)]
 pub enum MessageExpiration {
         TimeInSeconds(u32),
         #[default] Disabled,
@@ -21,6 +22,24 @@ pub struct Contact {
     pub message_expiration: MessageExpiration,
     pub _color: String // Unimportant field, could maybe use it to color profile names with similar color?
 }
+
+#[derive(Debug, Default, Clone)]
+pub struct Group {
+    pub id: String,
+    pub numeric_id: u16,
+    pub name: String,
+    pub description: String,   
+    pub active: bool,
+    pub blocked: bool,
+    pub members: Vec<String>,
+    pub pending_members: Vec<String>,
+    pub requesting_members: Vec<String>,
+    pub admins: Vec<String>,
+    pub banned: Vec<String>,
+    pub message_expiration: MessageExpiration,
+    pub link: String // https://signal.group/#Cj... // should it be some kind of url type insead of String?
+}
+
 
 // Conversion from u32 to MessageExpiration
 impl From<u32> for MessageExpiration {
@@ -58,6 +77,31 @@ impl fmt::Display for Contact {
                 self.name.bold().green(),
                 self.profile_name.underline().cyan(),
                 self.message_expiration,
+            )
+        }
+    }
+}
+
+// Implement Display trait for Group
+impl fmt::Display for Group {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        if self.active {
+                write!(
+                    f,
+                    "{}, message_expiration: {}, Description: {}",
+                    self.name.bold().green(),
+                    self.message_expiration,
+                    self.description.italic().blue(),
+                    //self.admins.join(" ").green(),
+                    //self.members.join(" | ").underline().bright_red(),
+                )
+        } else {
+            write!(
+                f,
+                "{}, Active: {}, Description: {}",
+                self.name.bold().red(),
+                self.active.to_string().to_uppercase().bold().red(),
+                self.description.underline().bright_red(),
             )
         }
     }

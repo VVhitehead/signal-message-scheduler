@@ -1,5 +1,6 @@
 use chrono::{NaiveDate, Duration, Local, NaiveTime, NaiveDateTime, TimeZone};
 use inquire::{Select, InquireError, Confirm, Text, validator::Validation, CustomType, DateSelect, required};
+use std::cmp::Ordering;
 use std::process::Command;
 use std::thread;
 use std::result::Result;
@@ -61,7 +62,7 @@ pub(crate) fn run_group_dialogue(grouplist: String) {
 }
 
 pub(crate) fn run_contact_dialogue(list_of_contacts: String) {
-    let account_number = get_account_number(&list_of_contacts);
+    //let _account_number = get_account_number(&list_of_contacts);
     let contacts = get_recipients(&list_of_contacts);
     let filtered_contacts: Vec<_> = contacts.iter().filter(|&contact| !(contact.name.is_empty() && contact.profile_name.is_empty())).cloned().collect();
     let choice = Select::new("Write and schedule a message for:", filtered_contacts).prompt();
@@ -93,8 +94,12 @@ pub(crate) fn run_contact_dialogue(list_of_contacts: String) {
                     let message_time = NaiveDateTime::parse_from_str(&format!("{} {}", pick_date().unwrap(), pick_time().unwrap()), "%Y-%m-%d %H:%M:%S").expect("Full DateTime string");
                     let message = store_message().unwrap();
                     countdown(message_time);
-                    if send_message_to_recipient(choice.number.clone(), message.clone(), &account_number) {
-                        println!("\"{}\" sent to {} @ {}", message.blink().bold().blue(), choice.number.red().italic(), message_time.to_string().italic().underline().bright_purple());
+                    if send_message_to_recipient(choice.account_identifier.clone(), message.clone()) {
+                        if !choice.number.is_empty() {
+                            println!("\"{}\" sent to {} @ {}", message.blink().bold().blue(), choice.number.red().italic(), message_time.to_string().italic().underline().bright_purple());
+                        } else {
+                            println!("\"{}\" sent to {} @ {}", message.blink().bold().blue(), choice.account_identifier.red().italic(), message_time.to_string().italic().underline().bright_purple());
+                        }
                     }
                 } else {
                     println!("{}", "Canceled!".bold().red());
@@ -166,7 +171,6 @@ fn get_recipients(input: &str) -> Vec<Contact> {
         let profile_name = extract_between(line, " Profile name: ", " Username: ");
         let blocked = extract_between(line, " Blocked: ", " Message expiration: ").trim() == "true";
 
-        //let message_expiration = match extract_between(line, " Message expiration: ", "Link: ").as_str() {
         let message_expiration = match line.split(" Message expiration: ").last().expect("string ‟disabled‟, or a string representing the number in seconds with a trailing's'(‟2419200s‟)") {
             "disabled" => MessageExpiration::Disabled,
             value => {
@@ -226,7 +230,7 @@ fn pick_time() -> Result<NaiveTime, InquireError> {
 fn store_message() -> Result<String, InquireError> {
     // TODO: add support for new lines, '\n' or "\\n", "\r\n" don't seem to work
     let message = Text::new("Type the message you want sent:")
-        .with_help_message("Signal formating might work, new lines don't tho...")
+        .with_help_message("Signals(`$ man signal-cli | grep style`) formating might work, new lines don't tho...")
         .with_validator(required!("Cannot send an empty message!"))
         .prompt();
     message
@@ -269,12 +273,10 @@ pub(crate) fn format_time_from_seconds(seconds: u64) -> String {
         minutes = seconds_remaining / 60;
         seconds_remaining %= 60;
     }
-    if days == 1 {
-        return format!("{0} day, {1:>02}:{2:>02}:{3:>02}", days, hours, minutes, seconds_remaining)
-    } else if days > 1 {
-       return format!("{0} days, {1:>02}:{2:>02}:{3:>02}", days, hours, minutes, seconds_remaining)
-    } else {
-        return format!("{0:>02}:{1:>02}:{2:>02}", hours, minutes, seconds_remaining)
+    match days.cmp(&1) {
+        Ordering::Less => format!("{0:>02}:{1:>02}:{2:>02}", hours, minutes, seconds_remaining),
+        Ordering::Equal => format!("{0} day, {1:>02}:{2:>02}:{3:>02}", days, hours, minutes, seconds_remaining),
+        Ordering::Greater => format!("{0} days, {1:>02}:{2:>02}:{3:>02}", days, hours, minutes, seconds_remaining)
     }
 }
 
@@ -296,8 +298,8 @@ fn send_message_to_self(message: String) -> bool {
     }
 }
 
-fn send_message_to_recipient(number: String, message: String, account: &str) -> bool {
-    match Command::new("signal-cli").args(["-a", account, "send", "-m", &message, &number]).output() {
+fn send_message_to_recipient(account_id: String, message: String) -> bool {
+    match Command::new("signal-cli").args(["send", "-m", &message, &account_id]).output() {
         Ok(output) => {
             if output.status.success() {
                 true
@@ -370,7 +372,7 @@ pub(crate) fn get_group_list() -> Option<String> {
     }
 }
 
-#[allow(dead_code)] // Makes an additional call adding unnecessary wait time unless multiple accounts
+#[allow(dead_code)] // Makes an additional call adding unnecessary wait time unless dealing with multiple Signal accounts
 // Change to `Option<Vec<String>>` to support multiple accounts
 pub(crate) fn get_own_accounts() -> Option<String> {
     match Command::new("signal-cli").arg("listAccounts").output() {
@@ -389,6 +391,7 @@ pub(crate) fn get_own_accounts() -> Option<String> {
     }
 }
 
+#[allow(dead_code)]
 fn get_account_number(contacts: &str) -> String {
     // Extracts primary device account number // might fail with multiple accounts?
     let mut words = contacts.split_whitespace();

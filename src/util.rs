@@ -1,5 +1,6 @@
-use chrono::{NaiveDate, Duration, Local, NaiveTime, NaiveDateTime, TimeZone};
+use chrono::{Duration, Local, NaiveDate, NaiveDateTime, NaiveTime, TimeZone};
 use inquire::{Select, InquireError, Confirm, Text, validator::Validation, CustomType, DateSelect, required};
+//use inquire::formatter::StringFormatter;
 use std::cmp::Ordering;
 use std::process::Command;
 use std::thread;
@@ -22,7 +23,7 @@ pub(crate) fn initial_select() -> String {
             } else if choice == "Groups" {
                 "groups".to_string()
             } else {
-                panic!("Failed to fetch groups(Maybe your not a member of any group?)");
+                panic!("Failed to fetch groups(Maybe you're not a member of any groups?)");
             }
         },
         Err(_) => panic!("Red or blue!"),
@@ -171,7 +172,7 @@ fn get_recipients(input: &str) -> Vec<Contact> {
         let profile_name = extract_between(line, " Profile name: ", " Username: ");
         let blocked = extract_between(line, " Blocked: ", " Message expiration: ").trim() == "true";
 
-        let message_expiration = match line.split(" Message expiration: ").last().expect("string ‟disabled‟, or a string representing the number in seconds with a trailing's'(‟2419200s‟)") {
+        let message_expiration = match line.split(" Message expiration: ").last().expect("string ‟disabled‟, or a string representing the number in seconds with a trailing 's'(‟2419200s‟)") {
             "disabled" => MessageExpiration::Disabled,
             value => {
                 if let Ok(seconds) = value.trim_matches('s').parse::<u32>() {
@@ -217,7 +218,7 @@ fn pick_date() -> Result<NaiveDate, InquireError> {
 }
 
 fn pick_time() -> Result<NaiveTime, InquireError> {
-    let time = CustomType::<NaiveTime>::new("Time of day on witch to send the message:")
+    let time = CustomType::<NaiveTime>::new("Time of day on which to send the message:")
         .with_default(NaiveTime::parse_from_str("12:00", "%H:%M").expect("12:00 as default"))
         .with_parser(&|i| NaiveTime::parse_from_str(i, "%H:%M").map_err(|_| ()))
         .with_help_message("Enter time in the format of <%H:%M>")
@@ -229,9 +230,15 @@ fn pick_time() -> Result<NaiveTime, InquireError> {
 
 fn store_message() -> Result<String, InquireError> {
     // TODO: add support for new lines, '\n' or "\\n", "\r\n" don't seem to work
+    // Formater does not seem to work it wokrs in the terminal but signal doesn't convert the new
+    // lines but leaves them as raw `\n` cuz I don't wrap the message in "" duh
+    //let formatter: StringFormatter = &|input| {
+    //    format!("\"{}\"", input.replace("\\n", "\n"))
+    //};
     let message = Text::new("Type the message you want sent:")
         .with_help_message("Signals(`$ man signal-cli | grep style`) formating might work, new lines don't tho...")
         .with_validator(required!("Cannot send an empty message!"))
+        //.with_formatter(formatter)
         .prompt();
     message
 }

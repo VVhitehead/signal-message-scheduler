@@ -38,7 +38,10 @@ pub(crate) fn run_group_dialogue(grouplist: String) {
     match choice {
         Ok(choice) => {
             if !choice.blocked {
-                let confirmed = Confirm::new(&(format!("You want to message: {} ({})", choice.name.green().bold(), format!("{}…", choice.description.get(0..20).unwrap()).blue().italic())))
+                let confirmed = Confirm::new(&(format!("You want to message: {} ({})", choice.name.green().bold(),
+                    format!(
+                        "{}…", choice.description.get(0..20).unwrap_or(&choice.description)
+                    ).blue().italic())))
                     .with_default(true)
                     .prompt()
                     .unwrap();

@@ -117,8 +117,7 @@ pub(crate) fn run_contact_dialogue(list_of_contacts: String) {
 
 fn get_groups(input: &str) -> Vec<Group> {
     let mut groups: Vec<Group> = Vec::new();
-
-    let split_input: Vec<&str> = input.split("\nId: ").collect();
+    let split_input: Vec<&str> = input.split("\n").collect();
     for (index, line) in split_input.into_iter().enumerate() {
         let id = extract_between(line, "Id: ", " Name: ");
         let active = extract_between(line, "Active: ", " Blocked: ").trim() == "true";
@@ -146,7 +145,7 @@ fn get_groups(input: &str) -> Vec<Group> {
         };
 
         let group = Group {
-            id, 
+            id,
             numeric_id: index as u16,
             name,
             description,

@@ -65,8 +65,8 @@ impl fmt::Display for Contact {
             write!(
                 f,
                 "{}|{}, blocked: {}, message_expiration: {}",
-                self.name.bold().green(),
-                self.profile_name.underline().cyan(),
+                self.name.bold().red(),
+                self.profile_name.underline().red(),
                 self.blocked.to_string().underline().to_uppercase().bold().red(),
                 self.message_expiration,
             )

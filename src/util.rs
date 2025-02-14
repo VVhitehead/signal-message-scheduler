@@ -14,7 +14,7 @@ use crate::contact::{Contact, MessageExpiration, Group};
 pub(crate) fn initial_select() -> String {
     let options: Vec<&str> = vec!["Contacts", "Groups"];
     let choice = Select::new("Access your contacts or groups?", options)
-        .with_help_message("Contacts are verified Signal users you've added and Groups are a collection of memebers which may or may not be in your Signal contacts.").prompt();
+        .with_help_message("Contacts are verified Signal users you've added and Groups are a collection of memebers which may or may not be in your Signal contacts but you are a member of.").prompt();
 
     match choice {
         Ok(choice) => {
@@ -117,9 +117,9 @@ pub(crate) fn run_contact_dialogue(list_of_contacts: String) {
 
 fn get_groups(input: &str) -> Vec<Group> {
     let mut groups: Vec<Group> = Vec::new();
-    let split_input: Vec<&str> = input.split("\n").collect();
+    let split_input: Vec<&str> = input.split("\nId").collect();
     for (index, line) in split_input.into_iter().enumerate() {
-        let id = extract_between(line, "Id: ", " Name: ");
+        let id = extract_between(line, ": ", " Name: ");
         let active = extract_between(line, "Active: ", " Blocked: ").trim() == "true";
         let blocked = extract_between(line, "Blocked: ", " Members: ").trim() == "true";
         let name = extract_between(line, "Name: ", " Description: ").trim().to_string();
